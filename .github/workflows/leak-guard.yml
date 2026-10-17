@@ -1,0 +1,31 @@
+name: leak-guard
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  leak-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Self-test
+        run: python scripts/leak_guard.py --self-test
+      - name: Scan lines added by this PR
+        if: github.event_name == 'pull_request'
+        env:
+          LEAK_GUARD_PRIVATE_TERMS: ${{ secrets.LEAK_GUARD_PRIVATE_TERMS }}
+        run: python scripts/leak_guard.py --diff "origin/${{ github.base_ref }}"
+      - name: Scan full tree
+        env:
+          LEAK_GUARD_PRIVATE_TERMS: ${{ secrets.LEAK_GUARD_PRIVATE_TERMS }}
+        run: python scripts/leak_guard.py --tree

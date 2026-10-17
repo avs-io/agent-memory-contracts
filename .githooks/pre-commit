@@ -1,0 +1,4 @@
+#!/bin/sh
+# Optional local hook. Enable once per clone:
+#   git config core.hooksPath .githooks && chmod +x .githooks/pre-commit
+exec python3 "$(git rev-parse --show-toplevel)/scripts/leak_guard.py" --staged

@@ -60,6 +60,13 @@ graph validators. Standard-library only. Apache-2.0.
 4. Run `examples/quickstart.py`; it must produce the expected
    "Bundle validated." output.
 5. Open a PR. CI will run on Python 3.10 / 3.11 / 3.12.
+6. The `leak-guard` workflow fails a PR if it adds private markers:
+   non-allowlisted emails, phone numbers, local home paths, API keys
+   or denylisted terms. Run `python scripts/leak_guard.py --tree`
+   locally. To get the optional pre-commit hook, run
+   `git config core.hooksPath .githooks && chmod +x .githooks/pre-commit`.
+   The denylist lives in
+   `.github/leak-guard.json`.
 
 ## Reporting a bug
 
