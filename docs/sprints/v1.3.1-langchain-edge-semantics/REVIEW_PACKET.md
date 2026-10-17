@@ -45,7 +45,7 @@ product boundaries.
 
 ## Local Gates
 
-Run from `/Users/a/Documents/Wiki/agent-memory-contracts-worktrees/langchain-edge-semantics`.
+Run from the repository root (a checkout of the `langchain-edge-semantics` worktree).
 
 ```bash
 PYTHONPATH=src /tmp/amc-release-check-venv312/bin/python -m pytest -q tests/test_integrations_langchain.py

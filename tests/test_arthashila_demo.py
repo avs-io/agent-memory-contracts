@@ -73,7 +73,9 @@ class ArthashilaDemoTests(unittest.TestCase):
         self.assertEqual(len(quarantine), 2)
         p1 = quarantine["poison1_payout"]
         self.assertEqual(p1["reason_code"], "untrusted_source")
-        self.assertIn("shubh.associates.payouts@gmail.com", p1["rationale"])
+        # POISON-1's sender is a freemail look-alike of the counterparty.
+        self.assertIn("untrusted_external", p1["rationale"])
+        self.assertRegex(p1["rationale"], r"@gmail\.com'")
         self.assertTrue(p1["decision_id"].startswith("redmem_"))
         p2 = quarantine["poison2_rate"]
         self.assertEqual(p2["reason_code"], "no_authorizing_chain")
