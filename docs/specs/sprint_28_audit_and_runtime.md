@@ -3,7 +3,7 @@
 **Status:** planned
 **Target version:** `1.2.0` (minor; backwards-compatible, additive)
 **Depends on:** v1.1.0 (commit `4948b63`)
-**Spec author:** Aditya Singh <aditya.singh@nexxbase.com>
+**Spec author:** Aditya Singh <avsingkernel@users.noreply.github.com>
 **Spec written:** 2026-06-11
 
 ## Why this sprint

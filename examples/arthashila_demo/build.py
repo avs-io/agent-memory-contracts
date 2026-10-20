@@ -114,17 +114,50 @@ REJECT_NO_AUTHORIZING_CHAIN = "no_authorizing_chain"
 
 #: Sender domains established in the corpus. Anything else is an
 #: untrusted source tier (POISON-1's freemail sender fails here).
-TRUSTED_DOMAINS = {"arthashila.in", "shubhassociates.in",
+#:
+#: The defaults are neutral placeholders, so the public repo carries
+#: no real-looking addresses. To run against the original corpus, put
+#: a ``trust.json`` next to ``walkthrough.md`` or pass
+#: ``--trust-config``:
+#:   {"internal_domain": "...", "trusted_domains": ["..."],
+#:    "authorized_officers": ["..."]}
+INTERNAL_DOMAIN = "arthashila.example"
+TRUSTED_DOMAINS = {INTERNAL_DOMAIN, "shubhassociates.in",
                    "trisysinfotech.com"}
 
 #: Officers whose written word can authorize counterparty terms
 #: (the email-009 payout control is the CFO's own statement).
 AUTHORIZED_OFFICERS = {
-    "priya.bansal@arthashila.in",
-    "rajat.maheshwari@arthashila.in",
-    "vikram.saini@arthashila.in",
-    "meera.kulkarni@arthashila.in",
+    "officer1@arthashila.example",
+    "officer2@arthashila.example",
+    "officer3@arthashila.example",
+    "officer4@arthashila.example",
 }
+
+TRUST_CONFIG_NAME = "trust.json"
+_TRUST_CONFIG_OVERRIDE: Path | None = None
+
+
+def load_trust_config(dataset_dir: Path,
+                      explicit: Path | None = None) -> bool:
+    """Override the placeholder trust settings from ``explicit`` or
+    ``<dataset_dir>/trust.json``. Returns True if a config was applied."""
+    global INTERNAL_DOMAIN
+    path = explicit or (Path(dataset_dir) / TRUST_CONFIG_NAME)
+    if not path.exists():
+        if explicit:
+            raise FileNotFoundError(f"trust config not found: {path}")
+        return False
+    cfg = json.loads(path.read_text(encoding="utf-8"))
+    INTERNAL_DOMAIN = str(cfg.get("internal_domain", INTERNAL_DOMAIN)).lower()
+    TRUSTED_DOMAINS.clear()
+    TRUSTED_DOMAINS.update(d.lower() for d in cfg.get("trusted_domains", []))
+    TRUSTED_DOMAINS.add(INTERNAL_DOMAIN)
+    if "authorized_officers" in cfg:
+        AUTHORIZED_OFFICERS.clear()
+        AUTHORIZED_OFFICERS.update(
+            a.lower() for a in cfg["authorized_officers"])
+    return True
 
 _CHECKS_PASS = {
     "provenance": "pass",
@@ -184,7 +217,7 @@ def _trust_tier(relpath: str, sender: str, text: str) -> str:
             domain not in TRUSTED_DOMAINS):
         return "untrusted_external"
     if domain:
-        if domain == "arthashila.in":
+        if domain == INTERNAL_DOMAIN:
             return "internal_verified"
         if domain in TRUSTED_DOMAINS:
             return "external_known_counterparty"
@@ -880,6 +913,7 @@ def build_runtime(dataset_dir: Path, out_dir: Path) -> dict[str, Any]:
     # Stage 1-3 record assembly is shared with the static path;
     # the difference is that nothing below enters memory except
     # through the gate.
+    load_trust_config(dataset_dir, _TRUST_CONFIG_OVERRIDE)
     adapter = DatasetAdapter(dataset_dir)
     for sub in ("emails", "policies", "poisoned"):
         for path in sorted((dataset_dir / sub).glob("*.md")):
@@ -1034,6 +1068,7 @@ def build(dataset_dir: Path, out_dir: Path) -> dict[str, Any]:
         raise FileNotFoundError(f"dataset directory not found: {dataset_dir}")
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    load_trust_config(dataset_dir, _TRUST_CONFIG_OVERRIDE)
     adapter = DatasetAdapter(dataset_dir)
 
     # Ingest the whole corpus (emails + policies + poisons) so the
@@ -1130,7 +1165,14 @@ def main(argv: list[str] | None = None) -> int:
         help="Run the same flow through the sqlite reference runtime "
              "(store + gate + grounding + anchors) instead of static "
              "record assembly.")
+    parser.add_argument(
+        "--trust-config", default=None,
+        help="JSON with internal_domain / trusted_domains / "
+             "authorized_officers (default: <dataset>/trust.json if "
+             "present, else neutral placeholders).")
     args = parser.parse_args(argv)
+    global _TRUST_CONFIG_OVERRIDE
+    _TRUST_CONFIG_OVERRIDE = Path(args.trust_config) if args.trust_config else None
 
     if args.runtime:
         summary = build_runtime(Path(args.dataset), Path(args.out))
