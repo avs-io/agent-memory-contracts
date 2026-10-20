@@ -1,0 +1,19 @@
+{
+  "_doc": "Denylist for scripts/leak_guard.py. Private words are stored only as sha256 hashes of lowercase tokens (two tokens are joined by one space), so this public file does not reveal them. Add one with: python scripts/leak_guard.py --hash 'term'. Terms that are too sensitive even as a hash, such as RBAC fixture names, go in the LEAK_GUARD_PRIVATE_TERMS repository secret (comma-separated). CI reads that secret, and nothing in the repo stores it.",
+  "email_allow_domains": [
+    "example.com", "example.org", "example.net",
+    "users.noreply.github.com"
+  ],
+  "email_allow_suffixes": [".example", ".test", ".invalid", ".localhost"],
+  "email_allow_addresses": [],
+  "path_allow_prefixes": ["/home/runner/", "/Users/runner/"],
+  "denied_token_sha256": [
+    "a3d1e5ce350b32361f16b007e994c47d8d47e0e5acc92a90e2cee0f26cfbbb8b",
+    "7ad2294085b9d3cabeb7e8ae05a16a558b34ebdf790c470390259b9dd0755f31",
+    "1393e52487ee6546dea4fd2e2ad0bcedd538a6e3369a1825be42b427e17c4fa4",
+    "8a7b40e7c89b6a56602a38b800f7d717af7f6831117b6f24e298c8f5ea7dad9e"
+  ],
+  "denied_regex": [],
+  "exclude_paths": [".github/leak-guard.json"],
+  "binary_extensions": [".png", ".jpg", ".jpeg", ".gif", ".pdf", ".ico", ".whl", ".gz", ".zip", ".db"]
+}
